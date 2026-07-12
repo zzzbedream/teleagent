@@ -21,7 +21,14 @@ PostgreSQL ◄── Indexer (WSS + eth_subscribe, backoff exponencial)
 ```
 
 - **Contrato:** `TeleAgentAccess.sol` en Avalanche Fuji — [`0x78cce8C167583bf358B3EA1c9C409e13A7Da691a`](https://testnet.snowtrace.io/address/0x78cce8C167583bf358B3EA1c9C409e13A7Da691a)
-- **Stack:** Python 3.11+ · FastAPI · LangChain + DeepSeek · ChromaDB · PostgreSQL · discord.py · web3.py v7 · Foundry
+- **Stack:** Python 3.12 · FastAPI · LangChain + DeepSeek · ChromaDB · PostgreSQL · discord.py · web3.py v7 · Foundry
+- **Landing + demo en vivo:** `frontend/` (prueba el RAG gratis desde el navegador, sin wallet)
+
+## Producción (Railway)
+
+Todo el sistema se despliega en Railway (6 servicios: backend, bot, indexer, PostgreSQL, ChromaDB y landing) y queda disponible 24/7 sin depender de una máquina local. Guía completa paso a paso en **[DEPLOYMENT.md](DEPLOYMENT.md)**.
+
+Cada servicio trae su propio `Dockerfile`; la landing incluye una demo en vivo que consume el `/query` del backend.
 
 ## Quickstart (5 pasos)
 
@@ -72,6 +79,7 @@ python bot/bot.py
 | `indexer/` | Listener WSS de eventos on-chain con reconexión y backoff exponencial |
 | `contracts/` | Contrato `TeleAgentAccess` + tests Foundry + script de deploy a Fuji |
 | `database/` | Modelos SQLAlchemy (usuarios, créditos en wei) |
+| `frontend/` | Landing de marketing + demo en vivo (nginx estático, listo para Railway) |
 | `scripts/` | Fetch del corpus oficial y creación de tablas |
 
 ## Licencia

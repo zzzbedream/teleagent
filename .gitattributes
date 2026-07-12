@@ -1,0 +1,8 @@
+# Los scripts de shell DEBEN usar LF (corren en contenedores Linux/Alpine).
+*.sh text eol=lf
+frontend/inject-config.sh text eol=lf
+frontend/default.conf.template text eol=lf
+
+# Dockerfiles y configs de contenedor: LF.
+Dockerfile text eol=lf
+*.Dockerfile text eol=lf

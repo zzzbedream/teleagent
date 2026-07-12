@@ -13,14 +13,14 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from database.models import User
+from database.models import User, normalize_async_db_url
 
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5432/teleagent")
+DATABASE_URL = normalize_async_db_url(os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5432/teleagent"))
 FASTAPI_URL = os.getenv("FASTAPI_URL", "http://localhost:8001/query")
 
 COST_PER_QUERY_WEI = 100_000_000_000_000_000  # 0.1 AVAX

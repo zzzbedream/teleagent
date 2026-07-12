@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TeleAgent — El copiloto de Avalanche9000, pagado en AVAX</title>
+  <meta name="description" content="Asistente RAG para desarrolladores de Avalanche9000. Respuestas ancladas a la documentación oficial, sin alucinaciones, con acceso pagado on-chain en AVAX." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="nav">
+    <a class="brand" href="#top">
+      <span class="brand-mark">◆</span> TeleAgent
+    </a>
+    <nav class="nav-links" aria-label="Navegación principal">
+      <a href="#demo">Demo</a>
+      <a href="#flujo">Cómo funciona</a>
+      <a href="#stack">Stack</a>
+      <a class="btn btn-ghost" id="nav-github" href="#" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-glow" aria-hidden="true"></div>
+      <p class="eyebrow">RAG autónomo · Avalanche9000</p>
+      <h1>Deja de pelear con docs.<br /><span class="accent">Pregúntale al copiloto</span> que sí leyó la fuente.</h1>
+      <p class="lede">
+        TeleAgent responde tus dudas de Avalanche9000 <strong>solo con documentación oficial</strong>
+        —ACPs, Builders Hub, Teleporter/ICM— sin inventar reglas pre-Etna. Acceso pagado
+        on-chain en AVAX nativo, directo desde Discord.
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" id="cta-discord" href="#" target="_blank" rel="noopener">Añadir el bot a Discord</a>
+        <a class="btn btn-ghost" href="#demo">Probar la demo →</a>
+      </div>
+      <a class="contract-badge" id="contract-link" href="#" target="_blank" rel="noopener">
+        <span class="dot"></span> Contrato en vivo en Fuji · <code id="contract-addr">0x78cc…691a</code>
+      </a>
+    </section>
+
+    <!-- LIVE DEMO -->
+    <section class="demo" id="demo">
+      <div class="section-head">
+        <h2>Pruébalo ahora, gratis</h2>
+        <p>Sin wallet, sin pagar. Escribe una duda técnica y mira cómo responde con fuentes.</p>
+      </div>
+      <div class="demo-card">
+        <form id="demo-form">
+          <label class="sr-only" for="demo-input">Tu pregunta</label>
+          <input id="demo-input" type="text" autocomplete="off"
+            placeholder="¿Qué cambió con la actualización Etna en Avalanche?" />
+          <button class="btn btn-primary" id="demo-submit" type="submit">Preguntar</button>
+        </form>
+        <div class="demo-chips">
+          <button class="chip" type="button">¿Qué es una L1 soberana?</button>
+          <button class="chip" type="button">¿Cómo funciona Teleporter/ICM?</button>
+          <button class="chip" type="button">¿Etna eliminó el requisito de 2000 AVAX?</button>
+        </div>
+        <div id="demo-output" class="demo-output" hidden>
+          <div class="demo-answer" id="demo-answer"></div>
+          <div class="demo-sources" id="demo-sources"></div>
+        </div>
+        <p class="demo-note" id="demo-note"></p>
+      </div>
+    </section>
+
+    <!-- FLUJO -->
+    <section class="flow" id="flujo">
+      <div class="section-head">
+        <h2>De la duda a la respuesta, en 4 pasos</h2>
+      </div>
+      <ol class="steps">
+        <li>
+          <span class="step-num">01</span>
+          <h3>Vincula tu wallet</h3>
+          <p>En Discord: <code>/link_wallet 0x…</code> conecta tu dirección EVM a tu cuenta.</p>
+        </li>
+        <li>
+          <span class="step-num">02</span>
+          <h3>Paga en AVAX</h3>
+          <p>Envías AVAX al contrato en Fuji. El indexer detecta el evento on-chain y te acredita.</p>
+        </li>
+        <li>
+          <span class="step-num">03</span>
+          <h3>Pregunta</h3>
+          <p><code>/ask</code> tu duda. El motor RAG busca en la documentación oficial indexada.</p>
+        </li>
+        <li>
+          <span class="step-num">04</span>
+          <h3>Recibe fuentes</h3>
+          <p>Respuesta anclada al contexto real, con las fuentes citadas. Cero alucinaciones.</p>
+        </li>
+      </ol>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="features">
+      <div class="feature">
+        <h3>Anti-alucinación por diseño</h3>
+        <p>Un system prompt estricto obliga a responder solo con el contexto recuperado. Si no está en los docs, lo dice — no lo inventa.</p>
+      </div>
+      <div class="feature">
+        <h3>Pagos nativos on-chain</h3>
+        <p>Sin tarjetas ni pasarelas. Un contrato en Fuji acepta AVAX y emite eventos que se convierten en créditos de consulta.</p>
+      </div>
+      <div class="feature">
+        <h3>Fuentes que sí importan</h3>
+        <p>Corpus construido desde ACPs, Builders Hub y los contratos de Teleporter/ICM. Conocimiento post-Etna, no folclore de foros.</p>
+      </div>
+    </section>
+
+    <!-- STACK -->
+    <section class="stack" id="stack">
+      <div class="section-head">
+        <h2>Construido sobre herramientas serias</h2>
+      </div>
+      <div class="badges">
+        <span>FastAPI</span><span>LangChain</span><span>DeepSeek</span><span>ChromaDB</span>
+        <span>PostgreSQL</span><span>web3.py</span><span>Foundry</span><span>Avalanche Fuji</span>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div>
+      <span class="brand-mark">◆</span> TeleAgent
+      <p>Copiloto RAG para desarrolladores de Avalanche9000.</p>
+    </div>
+    <div class="footer-links">
+      <a id="footer-github" href="#" target="_blank" rel="noopener">Código en GitHub</a>
+      <a id="footer-contract" href="#" target="_blank" rel="noopener">Contrato en Snowtrace</a>
+    </div>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

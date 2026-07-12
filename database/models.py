@@ -5,6 +5,22 @@ from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
 
+
+def normalize_async_db_url(url: str) -> str:
+    """Normaliza la URL de Postgres al driver async (asyncpg).
+
+    Railway/Heroku entregan `postgres://` o `postgresql://`; SQLAlchemy async
+    necesita `postgresql+asyncpg://`. Si ya viene con un driver, no la toca.
+    """
+    if not url:
+        return url
+    if url.startswith("postgres://"):
+        url = "postgresql://" + url[len("postgres://"):]
+    if url.startswith("postgresql://"):
+        url = "postgresql+asyncpg://" + url[len("postgresql://"):]
+    return url
+
+
 class User(Base):
     __tablename__ = 'users'
 
@@ -17,7 +33,7 @@ class User(Base):
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
 async def init_db(database_url: str):
-    engine = create_async_engine(database_url, echo=True)
+    engine = create_async_engine(normalize_async_db_url(database_url), echo=False)
     async_session = async_sessionmaker(
         engine, expire_on_commit=False, class_=AsyncSession
     )
