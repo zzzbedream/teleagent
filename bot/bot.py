@@ -9,6 +9,7 @@ from discord.ext import commands
 from discord import app_commands
 from dotenv import load_dotenv
 from sqlalchemy import select, update, func
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
@@ -74,20 +75,23 @@ async def link_wallet(interaction: discord.Interaction, address: str):
 
     discord_id = str(interaction.user.id)
 
-    async with bot.async_session() as session:
-        stmt = select(User).where(User.discord_id == discord_id)
-        result = await session.execute(stmt)
-        user = result.scalar_one_or_none()
+    try:
+        async with bot.async_session() as session:
+            stmt = select(User).where(User.discord_id == discord_id)
+            result = await session.execute(stmt)
+            user = result.scalar_one_or_none()
 
-        if user:
-            user.wallet_address = address
-            await session.commit()
-            await interaction.response.send_message(f"✅ Billetera actualizada a: `{address}`", ephemeral=True)
-        else:
-            new_user = User(discord_id=discord_id, wallet_address=address, api_credits=0)
-            session.add(new_user)
-            await session.commit()
-            await interaction.response.send_message(f"✅ Cuenta vinculada exitosamente con la billetera: `{address}`", ephemeral=True)
+            if user:
+                user.wallet_address = address
+                await session.commit()
+                await interaction.response.send_message(f"✅ Billetera actualizada a: `{address}`", ephemeral=True)
+            else:
+                new_user = User(discord_id=discord_id, wallet_address=address, api_credits=0)
+                session.add(new_user)
+                await session.commit()
+                await interaction.response.send_message(f"✅ Cuenta vinculada exitosamente con la billetera: `{address}`", ephemeral=True)
+    except IntegrityError:
+        await interaction.response.send_message("❌ Esa billetera ya está vinculada a otra cuenta de Discord.", ephemeral=True)
 
 @bot.tree.command(name="ask", description="Pregúntale a TeleAgent sobre Avalanche9000.")
 @app_commands.describe(pregunta="Tu consulta técnica")
@@ -106,7 +110,7 @@ async def ask(interaction: discord.Interaction, pregunta: str):
             async with http_session.post(FASTAPI_URL, json={"prompt": pregunta}) as response:
                 if response.status == 200:
                     data = await response.json()
-                    answer = data.get("answer", "No content")
+                    answer = data.get("answer") or "No obtuve contenido de la documentación para esta consulta."
 
                     if len(answer) > DISCORD_MESSAGE_LIMIT:
                         answer = answer[:DISCORD_MESSAGE_LIMIT] + "..."
