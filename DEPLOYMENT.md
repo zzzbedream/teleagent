@@ -26,6 +26,15 @@ Vas a crear **6 servicios** dentro de un mismo proyecto de Railway, todos desde 
 
 En los 4 servicios que salen del repo, deja **Root Directory = `/`** (la raíz) y solo cambia el **Dockerfile Path**. El contexto de build es la raíz del repo (así comparten el módulo `database/`).
 
+> 🛑 **PASO OBLIGATORIO EN CADA SERVICIO DEL REPO — no lo saltes:**
+> Railway por defecto usa su autodetector (**Railpack**) y **fallará** con un error tipo
+> *"Railpack could not determine how to build the app"*. Tienes que decirle que use tu Dockerfile:
+>
+> Servicio → **Settings** → **Build** → campo **Dockerfile Path** → escribe la ruta
+> (`backend/Dockerfile`, `bot/Dockerfile`, `indexer/Dockerfile` o `frontend/Dockerfile`) → **Redeploy**.
+>
+> Con eso el builder cambia de Railpack a Docker. **Root Directory** queda vacío / en `/`.
+
 ---
 
 ## Paso 1 — Crear el proyecto y la base de datos
@@ -141,6 +150,8 @@ Si los 5 pasos pasan: **está listo para el grant**. 🎉
 
 ## Notas y solución de problemas
 
+- **Error `Railpack could not determine how to build the app`:** ese servicio no tiene el **Dockerfile Path** configurado. Ve a Settings → Build → Dockerfile Path y pon la ruta correcta (`backend/Dockerfile`, etc.). Es el error #1 más común.
+- **¿Cuándo se crea la base de datos?** El **servidor** PostgreSQL lo creas tú al añadir el plugin (Paso 1, antes de todo). Las **tablas** (`users`) se crean **solas** cuando el backend arranca por primera vez (no hay paso manual en producción). Orden: Postgres → backend deploya → tablas listas → bot/indexer las usan.
 - **La demo de la landing dice "backend no configurado":** falta `BACKEND_URL` en el servicio landing.
 - **CORS bloqueado en el navegador:** pon la URL de la landing en `ALLOWED_ORIGINS` del backend.
 - **El indexer no acredita:** revisa que `CONTRACT_ADDRESS` esté bien y que la wallet esté vinculada con `/link_wallet` **antes** de pagar.
