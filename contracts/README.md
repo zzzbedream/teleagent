@@ -18,12 +18,14 @@ forge test
 
 ## Deploy a Fuji
 
-```shell
-export PRIVATE_KEY=<tu_clave_privada_de_testnet>
+1. Copia `contracts/.env.example` a `contracts/.env` y pega tu clave privada de
+   **testnet** en `DEPLOYER_PRIVATE_KEY` (ver la advertencia de seguridad en ese archivo).
+2. Consigue AVAX de testnet en el [Fuji Faucet](https://core.app/tools/testnet-faucet/).
+3. Corre el deploy (Foundry lee la clave del `.env` automáticamente; no la escribes en la terminal):
 
+```shell
 forge script script/Deploy.s.sol:DeployScript \
   --rpc-url https://api.avax-test.network/ext/bc/C/rpc \
-  --private-key $PRIVATE_KEY \
   --broadcast
 ```
 

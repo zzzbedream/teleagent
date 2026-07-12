@@ -40,9 +40,10 @@ python scripts/init_db.py
 python scripts/fetch_repos.py
 python backend/app/ingest.py
 
-# 3. Contrato en Fuji (una sola vez; copia la dirección a .env)
+# 3. Contrato en Fuji (una sola vez; copia la dirección a .env de la raíz)
+#    Antes: pon tu clave de testnet en contracts/.env (DEPLOYER_PRIVATE_KEY).
 cd contracts && forge test && forge script script/Deploy.s.sol:DeployScript \
-  --rpc-url https://api.avax-test.network/ext/bc/C/rpc --private-key $PRIVATE_KEY --broadcast && cd ..
+  --rpc-url https://api.avax-test.network/ext/bc/C/rpc --broadcast && cd ..
 
 # 4. Servicios (tres terminales)
 uvicorn app.main:app --port 8001 --app-dir backend
