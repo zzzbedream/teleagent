@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '..', '.env'))
 
-from app.llm_chain import generate_answer
+from app.llm_chain import generate_answer, get_document_count
 
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
@@ -49,7 +49,8 @@ class QueryRequest(BaseModel):
 
 @app.get("/health")
 async def health_check():
-    return {"status": "ok"}
+    # documents: nº de docs en ChromaDB. >0 = el cerebro está cargado; 0 = falta sembrar el corpus.
+    return {"status": "ok", "documents": get_document_count()}
 
 
 @app.post("/query")

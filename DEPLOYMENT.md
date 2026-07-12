@@ -1,66 +1,42 @@
 # 🚂 Despliegue en Railway — TeleAgent
 
-Guía paso a paso para dejar TeleAgent **funcionando 24/7 sin depender de tu PC**.
-Todo se aloja en Railway: los 3 servicios Python, PostgreSQL, ChromaDB y la landing.
+Guía para dejar TeleAgent **funcionando 24/7 sin depender de tu PC**. Todo se aloja en Railway:
+6 servicios. El despliegue se hace en **dos fases**: primero **el cerebro** (y se verifica que
+tiene conocimiento), y solo entonces **las caras** (landing, bot, indexer).
 
-> **Antes de empezar necesitas:**
-> - El repo ya publicado en GitHub (`zzzbedream/teleagent`).
-> - Cuenta en [railway.app](https://railway.app) (login con GitHub).
-> - Tu `DISCORD_TOKEN`, `DEEPSEEK_API_KEY` y la URL de invitación del bot.
-> - El contrato ya está desplegado en Fuji: `0x78cce8C167583bf358B3EA1c9C409e13A7Da691a`.
+> **Por qué en dos fases:** el conocimiento del bot NO viene pre-cargado. Es documentación
+> oficial (ACPs + Builders Hub + Teleporter, ~320+ documentos) que se descarga y se convierte en
+> embeddings dentro de ChromaDB en un paso único (el "seed"). Antes de sembrar, ChromaDB está
+> **vacío** y el bot respondería "no tengo información" a todo. Por eso se despliega y **verifica
+> el cerebro antes** de montar lo visible encima.
 
----
+**Datos que reusarás:**
+- Repo: `zzzbedream/teleagent`
+- Contrato Fuji: `0x78cce8C167583bf358B3EA1c9C409e13A7Da691a`
+- Necesitas: `DEEPSEEK_API_KEY`, `DISCORD_TOKEN`, y el `DISCORD_INVITE_URL` (Fase B).
+- La URL pública del backend (se genera en A3; se reusa en landing y bot).
 
-## Arquitectura de servicios en Railway
-
-Vas a crear **6 servicios** dentro de un mismo proyecto de Railway, todos desde el mismo repo:
-
-| # | Servicio | Tipo | Dockerfile Path | Puerto público |
-|---|----------|------|-----------------|----------------|
-| 1 | **postgres** | Base de datos (plugin) | — | no |
-| 2 | **chromadb** | Docker Image `chromadb/chroma:latest` | — | no |
-| 3 | **backend** | Dockerfile del repo | `backend/Dockerfile` | sí |
-| 4 | **bot** | Dockerfile del repo | `bot/Dockerfile` | no |
-| 5 | **indexer** | Dockerfile del repo | `indexer/Dockerfile` | no |
-| 6 | **landing** | Dockerfile del repo | `frontend/Dockerfile` | sí |
-
-En los 4 servicios que salen del repo, deja **Root Directory = `/`** (la raíz) y solo cambia el **Dockerfile Path**. El contexto de build es la raíz del repo (así comparten el módulo `database/`).
-
-> 🛑 **PASO OBLIGATORIO EN CADA SERVICIO DEL REPO — no lo saltes:**
-> Railway por defecto usa su autodetector (**Railpack**) y **fallará** con un error tipo
-> *"Railpack could not determine how to build the app"*. Tienes que decirle que use tu Dockerfile:
->
-> Servicio → **Settings** → **Build** → campo **Dockerfile Path** → escribe la ruta
-> (`backend/Dockerfile`, `bot/Dockerfile`, `indexer/Dockerfile` o `frontend/Dockerfile`) → **Redeploy**.
->
-> Con eso el builder cambia de Railpack a Docker. **Root Directory** queda vacío / en `/`.
+> 🛑 **Cada servicio que sale del repo** necesita, en **Settings → Config-as-code → Railway
+> Config File**, la ruta a su `railway.json` (`backend/railway.json`, `frontend/railway.json`,
+> etc.). Sin eso, Railway usa Railpack y **falla**. Deja **Root Directory** vacío / en `/`.
 
 ---
 
-## Paso 1 — Crear el proyecto y la base de datos
+# FASE A — El cerebro (desplegar y VERIFICAR)
 
-1. En Railway: **New Project** → **Deploy from GitHub repo** → elige `zzzbedream/teleagent`.
-   - Railway intentará detectar un servicio. Si crea uno automático, lo configuramos como **backend** en el Paso 3 (o bórralo y créalos manualmente).
-2. Dentro del proyecto: **+ New** → **Database** → **Add PostgreSQL**.
-   - Railway crea el servicio `Postgres` y expone variables (`DATABASE_URL`, `PGHOST`, etc.).
+## A1. PostgreSQL
+En el proyecto: **`Ctrl`+`K`** → escribe `Postgres` → **Add PostgreSQL**. Sin más config.
+(El botón para bases de datos está en el **lienzo del proyecto**, no dentro de un servicio.)
 
-## Paso 2 — Añadir ChromaDB
+## A2. ChromaDB
+1. **`+ New` → Docker Image** → `chromadb/chroma:latest`.
+2. Renómbralo **EXACTAMENTE `chromadb`** (para el hostname `chromadb.railway.internal`).
+3. **Settings → Volumes** → volumen en `/chroma/chroma`. Sin dominio público. Escucha en `8000`.
 
-1. **+ New** → **Empty Service** (o **Docker Image**) → imagen: `chromadb/chroma:latest`.
-2. Renómbralo a **chromadb**.
-3. En **Settings → Networking**: no necesita dominio público (lo consume el backend por red privada).
-4. En **Settings → Volumes**: añade un volumen montado en `/chroma/chroma` (para que el corpus persista).
-5. Este servicio escucha en el puerto **8000** internamente.
-
-## Paso 3 — Servicio backend (RAG)
-
-1. **+ New** → **GitHub Repo** → `zzzbedream/teleagent` (o usa el servicio auto-creado).
-2. **Settings → Build**:
-   - **Dockerfile Path**: `backend/Dockerfile`
-   - **Root Directory**: `/`
-3. **Settings → Networking**: **Generate Domain** (esto te da la URL pública, ej. `https://backend-production-xxxx.up.railway.app`). Anótala.
-4. **Variables** (pestaña Variables del servicio):
-
+## A3. Backend (RAG)
+1. **Config-as-code → Railway Config File** = `backend/railway.json`.
+2. **Networking → Generate Domain** → **copia la URL** (ej. `https://backend-xxx.up.railway.app`).
+3. **Variables:**
    ```
    DEEPSEEK_API_KEY = tu_api_key_de_deepseek
    DATABASE_URL     = ${{Postgres.DATABASE_URL}}
@@ -69,92 +45,92 @@ En los 4 servicios que salen del repo, deja **Root Directory = `/`** (la raíz) 
    ALLOWED_ORIGINS  = *
    ```
 
-   > `${{Postgres.DATABASE_URL}}` es una **referencia** a la variable del servicio Postgres (Railway la resuelve sola; el código la convierte a asyncpg automáticamente).
-   > `chromadb.railway.internal` es el hostname de red privada del servicio chromadb (ajústalo si le pusiste otro nombre).
+> ⚠️ Carga un modelo de embeddings (torch): necesita **≥1–2 GB de RAM**. Si se reinicia por
+> memoria (OOM), súbele el plan a este servicio.
 
-5. Deja que despliegue. El backend crea las tablas de la base de datos **solo** al arrancar.
+## A4. Sembrar el corpus (una sola vez)
+Con backend y chromadb arriba, en el servicio **backend** → Terminal/Shell (o CLI de Railway):
+```
+python scripts/fetch_repos.py && python -m app.ingest
+```
+Descarga la documentación oficial y la indexa. Tarda varios minutos.
 
-> ⚠️ **Memoria:** el backend carga un modelo de embeddings (torch). Necesita un plan con **≥ 1 GB de RAM** (idealmente 2 GB). En el plan gratuito puede quedarse corto; si ves que se reinicia por OOM, sube el plan del servicio backend.
+## A5. 🚦 Filtro de verificación (NO sigas si falla)
+- Abre `https://TU-BACKEND.up.railway.app/health` → debe decir **`"documents": ~320`** (no `0`).
+  - `documents: 0` → el seed (A4) no cargó nada; revísalo antes de continuar.
+  - `documents: null` → el backend no alcanza a ChromaDB; revisa `CHROMA_HOST`.
+- **Solo si `documents` > 0, pasa a la Fase B.**
 
-## Paso 4 — Sembrar el corpus (una sola vez)
+---
 
-ChromaDB arranca vacío. Hay que cargar la documentación oficial **una vez**:
+# FASE B — Las caras (solo tras pasar el filtro A5)
 
-1. Ve al servicio **backend** → pestaña de terminal/consola (o usa `railway run` desde tu PC con la CLI).
-2. Ejecuta:
+## B0. Link de invitación del bot (Discord Developer Portal)
+App → **OAuth2 → URL Generator** → scopes **`bot`** + **`applications.commands`**; permisos
+**Send Messages** + **Use Slash Commands**. Copia la URL → es tu `DISCORD_INVITE_URL`.
+Ábrela una vez para **invitar el bot a tu servidor**.
 
-   ```bash
-   python scripts/fetch_repos.py && python -m app.ingest
+## B1. Landing (marketing + demo)
+1. **Railway Config File** = `frontend/railway.json`.
+2. **Generate Domain** → **esta es la URL para los jueces**.
+3. **Variables:**
    ```
+   BACKEND_URL        = https://TU-BACKEND.up.railway.app      (SIN /query ni /health)
+   DISCORD_INVITE_URL = (el link de B0)
+   GITHUB_URL         = https://github.com/zzzbedream/teleagent
+   CONTRACT_ADDRESS   = 0x78cce8C167583bf358B3EA1c9C409e13A7Da691a
+   ```
+4. (Recomendado) Vuelve al **backend** y cambia `ALLOWED_ORIGINS = *` por la URL de la landing.
 
-   Esto clona ACPs + Builders Hub + Teleporter y los indexa en ChromaDB. Puede tardar varios minutos.
-
-   > Alternativa desde tu PC (sin la consola de Railway): instala la [CLI de Railway](https://docs.railway.app/guides/cli), corre `railway link`, luego `railway run --service backend python scripts/fetch_repos.py` y `railway run --service backend python -m app.ingest`.
-
-## Paso 5 — Servicio bot (Discord)
-
-1. **+ New** → **GitHub Repo** → mismo repo.
-2. **Settings → Build → Dockerfile Path**: `bot/Dockerfile`, Root Directory `/`.
-3. **Variables**:
-
+## B2. Bot (Discord)
+1. **Railway Config File** = `bot/railway.json`. Sin dominio.
+2. **Variables:**
    ```
    DISCORD_TOKEN = tu_token_del_bot
    DATABASE_URL  = ${{Postgres.DATABASE_URL}}
-   FASTAPI_URL   = https://TU-BACKEND.up.railway.app/query
+   FASTAPI_URL   = https://TU-BACKEND.up.railway.app/query     (CON /query al final)
    ```
 
-   > `FASTAPI_URL` = la URL pública del backend del Paso 3, **con `/query` al final**.
-
-## Paso 6 — Servicio indexer (eventos on-chain)
-
-1. **+ New** → **GitHub Repo** → mismo repo.
-2. **Settings → Build → Dockerfile Path**: `indexer/Dockerfile`, Root Directory `/`.
-3. **Variables**:
-
+## B3. Indexer (eventos on-chain)
+1. **Railway Config File** = `indexer/railway.json`. Sin dominio.
+2. **Variables:**
    ```
    WSS_URL          = wss://api.avax-test.network/ext/bc/C/ws
    DATABASE_URL     = ${{Postgres.DATABASE_URL}}
    CONTRACT_ADDRESS = 0x78cce8C167583bf358B3EA1c9C409e13A7Da691a
    ```
 
-## Paso 7 — Servicio landing (marketing + demo)
-
-1. **+ New** → **GitHub Repo** → mismo repo.
-2. **Settings → Build → Dockerfile Path**: `frontend/Dockerfile`, Root Directory `/`.
-3. **Settings → Networking**: **Generate Domain** (esta es la URL que compartes con los jueces).
-4. **Variables**:
-
-   ```
-   BACKEND_URL       = https://TU-BACKEND.up.railway.app
-   DISCORD_INVITE_URL = https://discord.com/oauth2/authorize?client_id=...&scope=bot+applications.commands&permissions=2048
-   GITHUB_URL        = https://github.com/zzzbedream/teleagent
-   CONTRACT_ADDRESS  = 0x78cce8C167583bf358B3EA1c9C409e13A7Da691a
-   ```
-
-   > `BACKEND_URL` **sin** `/query` (el JS lo añade). La demo de la landing llama a este backend.
-   > Una vez tengas la URL de la landing, vuelve al **backend** y cambia `ALLOWED_ORIGINS` de `*` a esa URL exacta (más seguro).
-
 ---
 
-## ✅ Prueba de producción (checklist final)
+## ✅ Verificación end-to-end final
 
-1. Abre la **URL de la landing** → debe cargar, y la caja de demo debe responder una pregunta (esto valida landing + backend + DeepSeek + ChromaDB).
-2. En **Discord**, con el bot invitado a tu servidor: `/link_wallet 0xTuWallet`.
-3. Envía 0.1 AVAX al contrato en Fuji (desde tu wallet o con `cast send`).
-4. Mira los **logs del indexer** en Railway → debe aparecer `Credited ... wei`.
+1. Abre la **URL de la landing** → carga y la demo responde una pregunta.
+2. En **Discord** (bot ya invitado): `/link_wallet 0xTuWallet`.
+3. Envía 0.1 AVAX al contrato en Fuji (`cast send $CONTRACT "deposit()" --value 0.1ether ...`).
+4. Logs del **indexer** en Railway → aparece `Credited ... wei`.
 5. En Discord: `/ask ¿Qué cambió con la actualización Etna?` → respuesta con fuentes y saldo descontado.
 
-Si los 5 pasos pasan: **está listo para el grant**. 🎉
+Si los 5 pasan: **listo para el grant.** 🎉
 
----
+## Tabla resumen
 
-## Notas y solución de problemas
+| Fase | Servicio | Railway Config File | Dominio | Variables clave |
+|---|---|---|---|---|
+| A1 | Postgres | — (plugin) | no | — |
+| A2 | chromadb | — (Docker image) | no | volumen /chroma/chroma |
+| A3 | backend | `backend/railway.json` | **sí** | DEEPSEEK_API_KEY, DATABASE_URL, CHROMA_HOST/PORT, ALLOWED_ORIGINS |
+| A4 | (seed) | — | — | `fetch_repos.py` + `app.ingest`, una vez |
+| A5 | (verificar) | — | — | `/health` → documents > 0 |
+| B1 | landing | `frontend/railway.json` | **sí** | BACKEND_URL, DISCORD_INVITE_URL, GITHUB_URL, CONTRACT_ADDRESS |
+| B2 | bot | `bot/railway.json` | no | DISCORD_TOKEN, DATABASE_URL, FASTAPI_URL |
+| B3 | indexer | `indexer/railway.json` | no | WSS_URL, DATABASE_URL, CONTRACT_ADDRESS |
 
-- **Error `Railpack could not determine how to build the app`:** ese servicio no tiene el **Dockerfile Path** configurado. Ve a Settings → Build → Dockerfile Path y pon la ruta correcta (`backend/Dockerfile`, etc.). Es el error #1 más común.
-- **¿Cuándo se crea la base de datos?** El **servidor** PostgreSQL lo creas tú al añadir el plugin (Paso 1, antes de todo). Las **tablas** (`users`) se crean **solas** cuando el backend arranca por primera vez (no hay paso manual en producción). Orden: Postgres → backend deploya → tablas listas → bot/indexer las usan.
-- **La demo de la landing dice "backend no configurado":** falta `BACKEND_URL` en el servicio landing.
-- **CORS bloqueado en el navegador:** pon la URL de la landing en `ALLOWED_ORIGINS` del backend.
-- **El indexer no acredita:** revisa que `CONTRACT_ADDRESS` esté bien y que la wallet esté vinculada con `/link_wallet` **antes** de pagar.
-- **Backend se reinicia (OOM):** sube la RAM del servicio backend (el modelo de embeddings pesa).
-- **El bot no muestra comandos:** revisa `DISCORD_TOKEN` y que el bot fue invitado con el scope `applications.commands`.
-- **Red privada:** los hostnames internos son `<nombre-del-servicio>.railway.internal`. Ajusta `CHROMA_HOST` si nombraste distinto el servicio.
+## Solución de problemas
+
+- **`Railpack could not determine how to build`:** falta el Railway Config File del servicio (arriba).
+- **`{"detail":"Not Found"}` en el backend:** es normal en `/`. Prueba `/health`.
+- **`/health` da `documents: 0`:** el corpus no se sembró (repite A4).
+- **`/health` da `documents: null`:** el backend no ve a ChromaDB (revisa `CHROMA_HOST`/nombre del servicio).
+- **La demo de la landing no responde:** falta `BACKEND_URL`, o CORS (pon la URL de la landing en `ALLOWED_ORIGINS`).
+- **Backend se reinicia (OOM):** súbele la RAM.
+- **El bot no muestra comandos:** revisa `DISCORD_TOKEN` y que se invitó con `applications.commands`.

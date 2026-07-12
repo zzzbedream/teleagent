@@ -13,9 +13,28 @@ logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
 CHROMA_HOST = os.getenv("CHROMA_HOST", "localhost")
 CHROMA_PORT = int(os.getenv("CHROMA_PORT", "8000"))
+COLLECTION_NAME = "avalanche9000_core"
 
 # Cadena cacheada a nivel módulo: cargar embeddings y conectar a Chroma es costoso.
 _chain = None
+
+
+def get_document_count() -> int | None:
+    """Cuántos documentos hay indexados en ChromaDB.
+
+    Sirve para verificar de un vistazo que el "cerebro" está cargado.
+    Devuelve el conteo, 0 si la colección aún no existe, o None si Chroma no responde.
+    """
+    try:
+        client = chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT)
+        try:
+            collection = client.get_collection(COLLECTION_NAME)
+        except Exception:
+            return 0  # Chroma vivo pero el corpus todavía no se ha sembrado.
+        return collection.count()
+    except Exception as e:
+        logging.warning(f"No se pudo consultar el conteo de ChromaDB: {e}")
+        return None
 
 def get_retriever():
     try:
@@ -23,7 +42,7 @@ def get_retriever():
         client = chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT)
         vectorstore = Chroma(
             client=client,
-            collection_name="avalanche9000_core",
+            collection_name=COLLECTION_NAME,
             embedding_function=embeddings
         )
         return vectorstore.as_retriever(search_kwargs={"k": 5})
