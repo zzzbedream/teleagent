@@ -1,0 +1,21 @@
+# Secretos y entorno
+.env
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+
+# Foundry (artefactos regenerables)
+contracts/out/
+contracts/cache/
+contracts/broadcast/
+
+# Corpus RAG (regenerable con scripts/fetch_repos.py)
+docs/
+
+# Varios
+*.log
+.DS_Store

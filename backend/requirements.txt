@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+langchain
+langchain-community
+langchain-huggingface
+langchain-openai
+chromadb
+sentence-transformers
+asyncpg
+sqlalchemy
+requests
+discord.py
+web3>=7.0.0
+aiohttp
+python-dotenv
