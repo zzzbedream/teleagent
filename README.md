@@ -20,7 +20,7 @@ PostgreSQL ◄── Indexer (WSS + eth_subscribe, backoff exponencial)
         TeleAgentAccess.sol (Fuji C-Chain)
 ```
 
-- **Contrato:** `TeleAgentAccess.sol` en Avalanche Fuji — dirección: `PENDIENTE_DE_DEPLOY` ([Snowtrace testnet](https://testnet.snowtrace.io/))
+- **Contrato:** `TeleAgentAccess.sol` en Avalanche Fuji — [`0x78cce8C167583bf358B3EA1c9C409e13A7Da691a`](https://testnet.snowtrace.io/address/0x78cce8C167583bf358B3EA1c9C409e13A7Da691a)
 - **Stack:** Python 3.11+ · FastAPI · LangChain + DeepSeek · ChromaDB · PostgreSQL · discord.py · web3.py v7 · Foundry
 
 ## Quickstart (5 pasos)
