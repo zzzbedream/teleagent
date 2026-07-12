@@ -1,9 +1,13 @@
+# langchain fijado a la línea 0.3.x: la 1.x eliminó langchain.chains
+# (create_retrieval_chain / create_stuff_documents_chain).
 fastapi
 uvicorn
-langchain
-langchain-community
-langchain-huggingface
-langchain-openai
+langchain-core>=0.3,<1.0
+langchain>=0.3,<1.0
+langchain-community>=0.3,<1.0
+langchain-text-splitters>=0.3,<1.0
+langchain-openai>=0.2,<1.0
+langchain-huggingface>=0.1,<1.0
 chromadb
 sentence-transformers
 asyncpg
