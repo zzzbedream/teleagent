@@ -4,138 +4,327 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>TeleAgent — El copiloto de Avalanche9000, pagado en AVAX</title>
-  <meta name="description" content="Asistente RAG para desarrolladores de Avalanche9000. Respuestas ancladas a la documentación oficial, sin alucinaciones, con acceso pagado on-chain en AVAX." />
+  <meta name="description" content="Asistente RAG para desarrolladores de Avalanche9000. Respuestas ancladas a documentación oficial, sin alucinaciones, con acceso pagado on-chain en AVAX nativo." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <div class="mesh" aria-hidden="true"></div>
+  <div class="grid-bg" aria-hidden="true"></div>
   <div class="grain" aria-hidden="true"></div>
 
+  <!-- ══════════ NAV ══════════ -->
   <header class="nav">
     <a class="brand" href="#top">
       <span class="brand-mark">◆</span> TeleAgent
+      <span class="brand-tag">Avalanche9000</span>
     </a>
     <nav class="nav-links" aria-label="Navegación principal">
       <a href="#demo">Demo</a>
-      <a href="#flujo">Cómo funciona</a>
-      <a href="#stack">Stack</a>
-      <a class="btn btn-ghost" id="nav-github" href="#" target="_blank" rel="noopener">GitHub</a>
+      <a href="#discord">Bot</a>
+      <a href="#revenue">Modelo</a>
+      <a href="#roadmap">Roadmap</a>
+      <a class="btn btn-ghost btn-sm" id="nav-github" href="#" target="_blank" rel="noopener">GitHub ↗</a>
+      <a class="btn btn-primary btn-sm" id="nav-discord" href="#" target="_blank" rel="noopener">Añadir a Discord</a>
     </nav>
   </header>
 
   <main id="top">
-    <!-- HERO -->
+    <!-- ══════════ HERO ══════════ -->
     <section class="hero">
       <div class="hero-glow" aria-hidden="true"></div>
-      <p class="eyebrow">RAG autónomo · Avalanche9000</p>
-      <h1>Deja de pelear con docs.<br /><span class="accent">Pregúntale al copiloto</span> que sí leyó la fuente.</h1>
-      <p class="lede">
-        TeleAgent responde tus dudas de Avalanche9000 <strong>solo con documentación oficial</strong>
-        —ACPs, Builders Hub, Teleporter/ICM— sin inventar reglas pre-Etna. Acceso pagado
-        on-chain en AVAX nativo, directo desde Discord.
-      </p>
-      <div class="hero-cta">
-        <a class="btn btn-primary" id="cta-discord" href="#" target="_blank" rel="noopener">Añadir el bot a Discord</a>
-        <a class="btn btn-ghost" href="#demo">Probar la demo →</a>
+      <div class="hero-badge reveal">
+        <span class="pulse-dot"></span>
+        En vivo en Avalanche Fuji · Postulante a Team1 Mini Grants
       </div>
-      <a class="contract-badge" id="contract-link" href="#" target="_blank" rel="noopener">
-        <span class="dot"></span> Contrato en vivo en Fuji · <code id="contract-addr">0x78cc…691a</code>
+      <h1 class="reveal">El copiloto que <span class="grad-text">sí leyó</span><br />la documentación de Avalanche.</h1>
+      <p class="lede reveal">
+        Los LLMs genéricos siguen recitando reglas muertas — como los 2,000 AVAX que la actualización
+        <strong>Etna eliminó</strong>. TeleAgent responde únicamente con <strong>documentación oficial
+        indexada</strong> (ACPs, Builders Hub, Teleporter/ICM) y cobra por consulta <strong>en AVAX
+        nativo, on-chain</strong>. Sin tarjetas. Sin suscripciones web2. Sin inventos.
+      </p>
+      <div class="hero-cta reveal">
+        <a class="btn btn-primary btn-lg" href="#demo">⚡ Probar la demo gratis</a>
+        <a class="btn btn-ghost btn-lg" id="cta-discord" href="#" target="_blank" rel="noopener">Añadir el bot a Discord</a>
+      </div>
+      <div class="stats-strip reveal" role="list">
+        <div class="stat" role="listitem">
+          <span class="stat-num">6,900+</span>
+          <span class="stat-label">fragmentos de docs oficiales indexados</span>
+        </div>
+        <div class="stat" role="listitem">
+          <span class="stat-num">0.1 AVAX</span>
+          <span class="stat-label">por consulta, directo al contrato</span>
+        </div>
+        <div class="stat" role="listitem">
+          <span class="stat-num">24/7</span>
+          <span class="stat-label">en producción, cero servidores propios</span>
+        </div>
+        <div class="stat" role="listitem">
+          <span class="stat-num">0</span>
+          <span class="stat-label">alucinaciones toleradas por diseño</span>
+        </div>
+      </div>
+      <a class="contract-badge reveal" id="contract-link" href="#" target="_blank" rel="noopener">
+        <span class="pulse-dot ok"></span> Contrato verificable en Fuji C-Chain · <code id="contract-addr">0x78cc…691a</code> ↗
       </a>
     </section>
 
-    <!-- LIVE DEMO -->
+    <!-- ══════════ DEMO EN VIVO ══════════ -->
     <section class="demo" id="demo">
-      <div class="section-head">
-        <h2>Pruébalo ahora, gratis</h2>
-        <p>Sin wallet, sin pagar. Escribe una duda técnica y mira cómo responde con fuentes.</p>
+      <div class="section-head reveal">
+        <p class="kicker">// DEMO EN VIVO — SIN WALLET, SIN REGISTRO</p>
+        <h2>Pregúntale ahora. Es el motor real de producción.</h2>
+        <p class="sub">La misma IA que corre en Discord, conectada al mismo cerebro de 6,900+ documentos.</p>
       </div>
-      <div class="demo-card">
-        <form id="demo-form">
-          <label class="sr-only" for="demo-input">Tu pregunta</label>
-          <input id="demo-input" type="text" autocomplete="off"
-            placeholder="¿Qué cambió con la actualización Etna en Avalanche?" />
-          <button class="btn btn-primary" id="demo-submit" type="submit">Preguntar</button>
-        </form>
-        <div class="demo-chips">
-          <button class="chip" type="button">¿Qué es una L1 soberana?</button>
-          <button class="chip" type="button">¿Cómo funciona Teleporter/ICM?</button>
-          <button class="chip" type="button">¿Etna eliminó el requisito de 2000 AVAX?</button>
+      <div class="terminal reveal">
+        <div class="terminal-bar">
+          <span class="tdot red"></span><span class="tdot yellow"></span><span class="tdot green"></span>
+          <span class="terminal-title">teleagent@fuji: ~/rag-engine</span>
         </div>
-        <div id="demo-output" class="demo-output" hidden>
-          <div class="demo-answer" id="demo-answer"></div>
-          <div class="demo-sources" id="demo-sources"></div>
+        <div class="terminal-body">
+          <form id="demo-form">
+            <span class="prompt-sign">❯</span>
+            <label class="sr-only" for="demo-input">Tu pregunta</label>
+            <input id="demo-input" type="text" autocomplete="off"
+              placeholder="¿Qué cambió con la actualización Etna?" />
+            <button class="btn btn-primary" id="demo-submit" type="submit">Preguntar</button>
+          </form>
+          <div class="demo-chips">
+            <button class="chip" type="button">¿Qué cambió con la actualización Etna?</button>
+            <button class="chip" type="button">¿Cómo despliego una L1 con el Avalanche CLI?</button>
+            <button class="chip" type="button">¿Qué es Teleporter / ICM?</button>
+          </div>
+          <div id="demo-output" class="demo-output" hidden>
+            <div class="demo-answer" id="demo-answer"></div>
+            <div class="demo-sources" id="demo-sources"></div>
+          </div>
+          <p class="demo-note" id="demo-note"></p>
         </div>
-        <p class="demo-note" id="demo-note"></p>
       </div>
     </section>
 
-    <!-- FLUJO -->
-    <section class="flow" id="flujo">
-      <div class="section-head">
-        <h2>De la duda a la respuesta, en 4 pasos</h2>
+    <!-- ══════════ INSTRUCTIVO DISCORD ══════════ -->
+    <section class="discord" id="discord">
+      <div class="section-head reveal">
+        <p class="kicker">// CÓMO FUNCIONA EN DISCORD — 4 PASOS</p>
+        <h2>De cero a respuesta experta en 2 minutos.</h2>
+        <p class="sub">Así lo prueban los jueces, así lo usará cada dev de Avalanche.</p>
       </div>
-      <ol class="steps">
-        <li>
-          <span class="step-num">01</span>
-          <h3>Vincula tu wallet</h3>
-          <p>En Discord: <code>/link_wallet 0x…</code> conecta tu dirección EVM a tu cuenta.</p>
+      <ol class="disc-steps">
+        <li class="disc-step reveal">
+          <div class="disc-num">01</div>
+          <div class="disc-content">
+            <h3>Invita el bot a tu servidor</h3>
+            <p>Un clic. Sin permisos raros: solo enviar mensajes y comandos slash.</p>
+            <a class="btn btn-ghost btn-sm" id="step-discord" href="#" target="_blank" rel="noopener">Invitar TeleAgent →</a>
+          </div>
         </li>
-        <li>
-          <span class="step-num">02</span>
-          <h3>Paga en AVAX</h3>
-          <p>Envías AVAX al contrato en Fuji. El indexer detecta el evento on-chain y te acredita.</p>
+        <li class="disc-step reveal">
+          <div class="disc-num">02</div>
+          <div class="disc-content">
+            <h3>Vincula tu wallet EVM</h3>
+            <div class="chat-mock">
+              <div class="msg user"><span class="who">tú</span><code>/link_wallet 0xTuDireccion…</code></div>
+              <div class="msg bot"><span class="who">TeleAgent</span>✅ Cuenta vinculada exitosamente con la billetera</div>
+            </div>
+          </div>
         </li>
-        <li>
-          <span class="step-num">03</span>
-          <h3>Pregunta</h3>
-          <p><code>/ask</code> tu duda. El motor RAG busca en la documentación oficial indexada.</p>
+        <li class="disc-step reveal">
+          <div class="disc-num">03</div>
+          <div class="disc-content">
+            <h3>Compra créditos con AVAX (testnet Fuji)</h3>
+            <p>Envía 0.1 AVAX al contrato — consíguelo gratis en el <a href="https://core.app/tools/testnet-faucet/" target="_blank" rel="noopener">faucet de Fuji</a>. El indexador on-chain detecta el evento <code>CreditsPurchased</code> y acredita tu saldo en segundos.</p>
+          </div>
         </li>
-        <li>
-          <span class="step-num">04</span>
-          <h3>Recibe fuentes</h3>
-          <p>Respuesta anclada al contexto real, con las fuentes citadas. Cero alucinaciones.</p>
+        <li class="disc-step reveal">
+          <div class="disc-num">04</div>
+          <div class="disc-content">
+            <h3>Pregunta lo que quieras</h3>
+            <div class="chat-mock">
+              <div class="msg user"><span class="who">tú</span><code>/ask ¿Qué cambió con la actualización Etna?</code></div>
+              <div class="msg bot"><span class="who">TeleAgent</span>Con la actualización Etna (ACP-77): los validadores ya no necesitan 2,000 AVAX; las Subnets son ahora L1s soberanas con tarifa continua de pago por uso… <em>[cita fuentes oficiales]</em></div>
+            </div>
+            <p class="fine">Si el motor falla, tu crédito se reembolsa automáticamente. Si la respuesta no está en los docs, lo dice — no inventa.</p>
+          </div>
         </li>
       </ol>
     </section>
 
-    <!-- FEATURES -->
-    <section class="features">
-      <div class="feature">
-        <h3>Anti-alucinación por diseño</h3>
-        <p>Un system prompt estricto obliga a responder solo con el contexto recuperado. Si no está en los docs, lo dice — no lo inventa.</p>
+    <!-- ══════════ POR QUÉ / BENTO ══════════ -->
+    <section class="why">
+      <div class="section-head reveal">
+        <p class="kicker">// POR QUÉ EXISTE</p>
+        <h2>Post-Etna, cada semana nacen L1s.<br />Sus devs preguntan a IAs que viven en el pasado.</h2>
       </div>
-      <div class="feature">
-        <h3>Pagos nativos on-chain</h3>
-        <p>Sin tarjetas ni pasarelas. Un contrato en Fuji acepta AVAX y emite eventos que se convierten en créditos de consulta.</p>
-      </div>
-      <div class="feature">
-        <h3>Fuentes que sí importan</h3>
-        <p>Corpus construido desde ACPs, Builders Hub y los contratos de Teleporter/ICM. Conocimiento post-Etna, no folclore de foros.</p>
+      <div class="bento">
+        <div class="bento-cell big reveal">
+          <h3>🧠 Anti-alucinación por diseño</h3>
+          <p>Un guardarraíl estricto obliga al modelo a responder solo con el contexto recuperado de docs oficiales. Si no está en la fuente, TeleAgent lo admite en vez de inventar comandos que rompen tu deploy. Esa honestidad es el producto.</p>
+        </div>
+        <div class="bento-cell reveal">
+          <h3>⛓️ Pagos 100% on-chain</h3>
+          <p>Contrato en Fuji que emite eventos → indexador WSS con backoff → créditos en segundos. Cero pasarelas, cero tarjetas, cero fricción web2.</p>
+        </div>
+        <div class="bento-cell reveal">
+          <h3>📚 Corpus vivo</h3>
+          <p>ACPs + Builders Hub + Teleporter/ICM re-indexados en cada build. El conocimiento se versiona junto al código.</p>
+        </div>
+        <div class="bento-cell reveal">
+          <h3>🌎 Bilingüe real</h3>
+          <p>Embeddings multilingües: pregunta en español sobre docs en inglés y recupera la fuente correcta. Hecho para LATAM (Team1) sin excluir al resto.</p>
+        </div>
+        <div class="bento-cell wide reveal">
+          <h3>🔍 Todo verificable</h3>
+          <p>Contrato en Snowtrace, código abierto en GitHub, respuestas con fuentes citadas y demo pública. Un juez puede auditar el flujo completo — pago incluido — en menos de 5 minutos.</p>
+        </div>
       </div>
     </section>
 
-    <!-- STACK -->
-    <section class="stack" id="stack">
-      <div class="section-head">
-        <h2>Construido sobre herramientas serias</h2>
+    <!-- ══════════ REVENUE / MARKET FIT ══════════ -->
+    <section class="revenue" id="revenue">
+      <div class="section-head reveal">
+        <p class="kicker">// MODELO DE NEGOCIO</p>
+        <h2>Revenue nativo en AVAX desde el día uno.</h2>
+        <p class="sub">No es un demo buscando modelo: el contrato ya cobra. La pregunta es solo cuánto escala.</p>
       </div>
-      <div class="badges">
+      <div class="pricing">
+        <div class="price-card reveal">
+          <div class="price-tier">HOY · EN PRODUCCIÓN</div>
+          <h3>Pay-per-query</h3>
+          <div class="price-num">0.1 <span>AVAX / consulta</span></div>
+          <ul>
+            <li>Créditos on-chain vía <code>deposit()</code></li>
+            <li>Reembolso automático si el motor falla</li>
+            <li>Demo web gratuita como funnel de adquisición</li>
+          </ul>
+        </div>
+        <div class="price-card featured reveal">
+          <div class="price-tier">FASE 2</div>
+          <h3>Suscripción on-chain</h3>
+          <div class="price-num">~2 <span>AVAX / mes ilimitado</span></div>
+          <ul>
+            <li>Espeja el modelo de tarifa continua de las L1s post-Etna (~1.33 AVAX/mes por validador)</li>
+            <li>Precio ancla familiar para el ecosistema</li>
+            <li>Streaming de pago con bloques de tiempo</li>
+          </ul>
+        </div>
+        <div class="price-card reveal">
+          <div class="price-tier">FASE 3 · B2B</div>
+          <h3>White-label por L1</h3>
+          <div class="price-num">Custom <span>por equipo / proyecto</span></div>
+          <ul>
+            <li>Instancia dedicada con los docs del propio proyecto L1</li>
+            <li>API pública medida en AVAX</li>
+            <li>SLA + canal privado de soporte</li>
+          </ul>
+        </div>
+      </div>
+      <div class="fit reveal">
+        <h3>¿Por qué hay mercado?</h3>
+        <div class="fit-grid">
+          <div class="fit-item">
+            <strong>El viento de cola es Etna misma.</strong>
+            <p>Al bajar el costo de lanzar una L1 de 2,000 AVAX a ~1.33 AVAX/mes, Avalanche convirtió el lanzamiento de blockchains en un mercado masivo. Cada nueva L1 = un equipo nuevo de devs con dudas técnicas urgentes.</p>
+          </div>
+          <div class="fit-item">
+            <strong>El dolor es medible.</strong>
+            <p>La información vive fragmentada en 40+ ACPs, cientos de páginas de Builders Hub y contratos de Teleporter. Los LLMs genéricos entrenados pre-Etna responden con reglas obsoletas: el costo de un error es un deploy roto o fondos mal gestionados.</p>
+          </div>
+          <div class="fit-item">
+            <strong>El pago no tiene fricción.</strong>
+            <p>Nuestro usuario ya tiene wallet y ya tiene AVAX. Cobrar en su propia moneda, en su propia cadena, elimina la barrera #1 de monetizar herramientas dev: la tarjeta de crédito corporativa.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ ROADMAP ══════════ -->
+    <section class="roadmap" id="roadmap">
+      <div class="section-head reveal">
+        <p class="kicker">// ROADMAP</p>
+        <h2>De copiloto a infraestructura del ecosistema.</h2>
+      </div>
+      <div class="timeline">
+        <div class="tl-item done reveal">
+          <div class="tl-marker"></div>
+          <div class="tl-card">
+            <div class="tl-when">Q3 2026 · ✅ HOY — EN PRODUCCIÓN</div>
+            <h3>MVP monetizado en Fuji</h3>
+            <ul>
+              <li>RAG con 6,900+ docs oficiales (ACPs, Builders Hub, Teleporter) bilingüe es/en</li>
+              <li>Bot de Discord con cobro por consulta y reembolso automático</li>
+              <li>Contrato de pagos + indexador on-chain con reconexión resiliente</li>
+              <li>Demo web pública + infraestructura cloud 24/7</li>
+            </ul>
+          </div>
+        </div>
+        <div class="tl-item reveal">
+          <div class="tl-marker"></div>
+          <div class="tl-card">
+            <div class="tl-when">Q4 2026 — CON EL MINI GRANT</div>
+            <h3>Mainnet + corpus expandido</h3>
+            <ul>
+              <li>Contrato auditado y desplegado en C-Chain mainnet</li>
+              <li>Suscripción mensual on-chain (~2 AVAX/mes)</li>
+              <li>Corpus ampliado: GitHub issues de ava-labs, ejemplos de código, foro de gobernanza</li>
+              <li>Re-indexado automático diario (el cerebro nunca envejece)</li>
+            </ul>
+          </div>
+        </div>
+        <div class="tl-item reveal">
+          <div class="tl-marker"></div>
+          <div class="tl-card">
+            <div class="tl-when">Q1 2027</div>
+            <h3>De responder a ejecutar</h3>
+            <ul>
+              <li>Generador asistido de <code>genesis.json</code> y configuración de L1s</li>
+              <li>Telegram + Slack (mismo cerebro, más superficies)</li>
+              <li>Métricas públicas de uso: consultas, precisión, revenue on-chain</li>
+            </ul>
+          </div>
+        </div>
+        <div class="tl-item reveal">
+          <div class="tl-marker"></div>
+          <div class="tl-card">
+            <div class="tl-when">Q2 2027</div>
+            <h3>Plataforma B2B</h3>
+            <ul>
+              <li>Instancias white-label: cada L1 con su propio TeleAgent y sus propios docs</li>
+              <li>API pública medida en AVAX para integraciones de terceros</li>
+              <li>Programa de revenue-share con comunidades y hubs regionales (Team1)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ STACK ══════════ -->
+    <section class="stack" id="stack">
+      <div class="section-head reveal">
+        <p class="kicker">// STACK</p>
+        <h2>Herramientas serias, arquitectura auditable.</h2>
+      </div>
+      <div class="badges reveal">
         <span>FastAPI</span><span>LangChain</span><span>DeepSeek</span><span>ChromaDB</span>
-        <span>PostgreSQL</span><span>web3.py</span><span>Foundry</span><span>Avalanche Fuji</span>
+        <span>PostgreSQL</span><span>web3.py</span><span>Foundry</span><span>Solidity</span>
+        <span>Discord.py</span><span>Avalanche Fuji</span>
       </div>
     </section>
   </main>
 
   <footer class="footer">
     <div>
-      <span class="brand-mark">◆</span> TeleAgent
-      <p>Copiloto RAG para desarrolladores de Avalanche9000.</p>
+      <span class="brand-mark">◆</span> <strong>TeleAgent</strong>
+      <p>Copiloto RAG para desarrolladores de Avalanche9000.<br />Construido para Team1 Mini Grants.</p>
     </div>
     <div class="footer-links">
-      <a id="footer-github" href="#" target="_blank" rel="noopener">Código en GitHub</a>
-      <a id="footer-contract" href="#" target="_blank" rel="noopener">Contrato en Snowtrace</a>
+      <a id="footer-github" href="#" target="_blank" rel="noopener">Código en GitHub ↗</a>
+      <a id="footer-contract" href="#" target="_blank" rel="noopener">Contrato en Snowtrace ↗</a>
+      <a href="#demo">Probar la demo</a>
     </div>
   </footer>
 

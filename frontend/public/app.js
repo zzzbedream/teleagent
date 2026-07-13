@@ -10,30 +10,51 @@
   var BACKEND = (cfg.backendUrl || "").replace(/\/$/, "");
   var SNOWTRACE = "https://testnet.snowtrace.io/address/" + CONTRACT;
 
-  // --- Wire de enlaces estáticos ---
-  function setLink(id, href, opts) {
+  // --- Enlaces estáticos ---
+  function setLink(id, href, disableIfEmpty) {
     var el = document.getElementById(id);
     if (!el) return;
     if (href) {
       el.href = href;
-    } else if (opts && opts.disable) {
+    } else if (disableIfEmpty) {
       el.href = "#";
       el.setAttribute("aria-disabled", "true");
       el.addEventListener("click", function (e) {
         e.preventDefault();
-        alert("El enlace de invitación del bot aún no está configurado. Se activa al desplegar en Railway (variable DISCORD_INVITE_URL).");
+        alert("El enlace de invitación del bot aún no está configurado (variable DISCORD_INVITE_URL en Railway).");
       });
     }
   }
 
   setLink("nav-github", GITHUB);
   setLink("footer-github", GITHUB);
-  setLink("cta-discord", DISCORD || null, { disable: !DISCORD });
+  setLink("nav-discord", DISCORD, true);
+  setLink("cta-discord", DISCORD, true);
+  setLink("step-discord", DISCORD, true);
   setLink("contract-link", SNOWTRACE);
   setLink("footer-contract", SNOWTRACE);
 
   var addr = document.getElementById("contract-addr");
   if (addr) addr.textContent = CONTRACT.slice(0, 6) + "…" + CONTRACT.slice(-4);
+
+  // --- Reveal on scroll (respeta prefers-reduced-motion vía CSS) ---
+  if ("IntersectionObserver" in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          e.target.classList.add("in");
+          io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+    Array.prototype.forEach.call(document.querySelectorAll(".reveal"), function (el) {
+      io.observe(el);
+    });
+  } else {
+    Array.prototype.forEach.call(document.querySelectorAll(".reveal"), function (el) {
+      el.classList.add("in");
+    });
+  }
 
   // --- Demo en vivo ---
   var form = document.getElementById("demo-form");
@@ -63,13 +84,13 @@
 
     output.hidden = false;
     answerEl.className = "demo-answer loading";
-    answerEl.textContent = "Consultando la documentación oficial…";
+    answerEl.textContent = "Consultando 6,900+ documentos oficiales de Avalanche";
     sourcesEl.innerHTML = "";
     note.textContent = "";
     submit.disabled = true;
 
     var controller = new AbortController();
-    var timer = setTimeout(function () { controller.abort(); }, 45000);
+    var timer = setTimeout(function () { controller.abort(); }, 60000);
 
     fetch(BACKEND + "/query", {
       method: "POST",
@@ -79,7 +100,7 @@
     })
       .then(function (r) {
         clearTimeout(timer);
-        if (r.status === 503) throw new Error("La base de datos vectorial no está disponible ahora mismo. Intenta más tarde.");
+        if (r.status === 503) throw new Error("La base vectorial no está disponible ahora mismo. Intenta más tarde.");
         if (!r.ok) throw new Error("El servidor respondió con un error (HTTP " + r.status + ").");
         return r.json();
       })
@@ -87,7 +108,7 @@
         answerEl.className = "demo-answer";
         answerEl.textContent = data.answer || "No obtuve contenido para esta consulta.";
         sourcesEl.innerHTML = "";
-        (data.sources || []).forEach(function (s) {
+        (data.sources || []).slice(0, 6).forEach(function (s) {
           var span = document.createElement("span");
           span.textContent = "📄 " + String(s).split(/[\\/]/).pop();
           sourcesEl.appendChild(span);
@@ -96,7 +117,7 @@
       .catch(function (err) {
         answerEl.className = "demo-answer";
         answerEl.textContent = "⚠️ " + (err.name === "AbortError"
-          ? "La consulta tardó demasiado. Intenta de nuevo."
+          ? "La consulta tardó demasiado (la primera del día calienta el motor). Intenta de nuevo."
           : err.message);
       })
       .finally(function () {
