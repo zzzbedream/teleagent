@@ -18,19 +18,10 @@ services:
     networks:
       - teleagent_net
 
-  chromadb:
-    image: chromadb/chroma:latest
-    ports:
-      - "8000:8000"
-    volumes:
-      - chroma_data:/chroma/chroma
-    restart: unless-stopped
-    networks:
-      - teleagent_net
+# ChromaDB ya no es un servicio: corre embebido dentro del backend (CHROMA_PATH).
 
 networks:
   teleagent_net:
 
 volumes:
   postgres_data:
-  chroma_data:

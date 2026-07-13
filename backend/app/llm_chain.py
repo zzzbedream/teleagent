@@ -1,7 +1,7 @@
 import os
 import logging
 from langchain_openai import ChatOpenAI
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_community.embeddings import FastEmbedEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_core.prompts import PromptTemplate
 from langchain.chains import create_retrieval_chain
@@ -11,12 +11,21 @@ import chromadb
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
-CHROMA_HOST = os.getenv("CHROMA_HOST", "localhost")
-CHROMA_PORT = int(os.getenv("CHROMA_PORT", "8000"))
+# ChromaDB embebido (persistente). En Railway el volumen se monta en /data → CHROMA_PATH=/data/chroma.
+CHROMA_PATH = os.getenv("CHROMA_PATH", "./chroma_data")
 COLLECTION_NAME = "avalanche9000_core"
 
-# Cadena cacheada a nivel módulo: cargar embeddings y conectar a Chroma es costoso.
+# Cacheados a nivel módulo: crear el cliente/embeddings/cadena es costoso.
 _chain = None
+_chroma_client = None
+
+
+def _get_chroma_client():
+    """Cliente único de ChromaDB embebido (evita abrir varios al mismo path)."""
+    global _chroma_client
+    if _chroma_client is None:
+        _chroma_client = chromadb.PersistentClient(path=CHROMA_PATH)
+    return _chroma_client
 
 
 def get_document_count() -> int | None:
@@ -26,7 +35,7 @@ def get_document_count() -> int | None:
     Devuelve el conteo, 0 si la colección aún no existe, o None si Chroma no responde.
     """
     try:
-        client = chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT)
+        client = _get_chroma_client()
         try:
             collection = client.get_collection(COLLECTION_NAME)
         except Exception:
@@ -38,10 +47,9 @@ def get_document_count() -> int | None:
 
 def get_retriever():
     try:
-        embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-        client = chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT)
+        embeddings = FastEmbedEmbeddings()
         vectorstore = Chroma(
-            client=client,
+            client=_get_chroma_client(),
             collection_name=COLLECTION_NAME,
             embedding_function=embeddings
         )

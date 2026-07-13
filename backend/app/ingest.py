@@ -6,7 +6,7 @@ from langchain_community.document_loaders import DirectoryLoader, TextLoader
 
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '..', '.env'))
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_community.embeddings import FastEmbedEmbeddings
 import chromadb
 from langchain_community.vectorstores import Chroma
 
@@ -63,13 +63,12 @@ def main():
     chunked_docs = hybrid_split_documents(all_docs)
     logging.info(f"Generated {len(chunked_docs)} chunks.")
 
-    logging.info("Initializing HuggingFace embeddings (all-MiniLM-L6-v2)...")
-    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    logging.info("Initializing FastEmbed (ONNX) embeddings...")
+    embeddings = FastEmbedEmbeddings()
 
-    chroma_host = os.getenv("CHROMA_HOST", "localhost")
-    chroma_port = int(os.getenv("CHROMA_PORT", "8000"))
-    logging.info(f"Connecting to ChromaDB at {chroma_host}:{chroma_port}...")
-    client = chromadb.HttpClient(host=chroma_host, port=chroma_port)
+    chroma_path = os.getenv("CHROMA_PATH", "./chroma_data")
+    logging.info(f"Opening embedded ChromaDB at {chroma_path}...")
+    client = chromadb.PersistentClient(path=chroma_path)
 
     # Ensure collection exists and is clean (idempotency)
     collection_name = "avalanche9000_core"

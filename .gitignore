@@ -16,6 +16,9 @@ contracts/broadcast/
 # Corpus RAG (regenerable con scripts/fetch_repos.py)
 docs/
 
+# ChromaDB embebido local (regenerable con ingest.py)
+chroma_data/
+
 # Varios
 *.log
 .DS_Store
