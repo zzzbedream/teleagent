@@ -12,6 +12,17 @@ from langchain_community.vectorstores import Chroma
 
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
+def clean_mdx(text: str) -> str:
+    """Limpia ruido de archivos .mdx/.md de fumadocs antes de indexar.
+
+    - Quita el frontmatter YAML inicial (--- ... ---).
+    - Quita líneas import/export de componentes JSX (no aportan al RAG y ensucian los chunks).
+    """
+    text = re.sub(r'\A---\s*\n.*?\n---\s*\n', '', text, flags=re.DOTALL)
+    text = re.sub(r'^(import|export)\s+.*$', '', text, flags=re.MULTILINE)
+    return text.strip()
+
+
 def hybrid_split_documents(docs):
     """
     Hybrid chunking: 
@@ -56,6 +67,13 @@ def main():
         loader = DirectoryLoader(docs_dir, glob=ext, loader_cls=TextLoader, silent_errors=True)
         docs = loader.load()
         all_docs.extend(docs)
+
+    # Limpiar ruido de markdown/mdx (frontmatter, imports JSX) antes de trocear.
+    for doc in all_docs:
+        src = doc.metadata.get("source", "").lower()
+        if src.endswith((".md", ".mdx")):
+            doc.page_content = clean_mdx(doc.page_content)
+    all_docs = [d for d in all_docs if d.page_content.strip()]
 
     logging.info(f"Loaded {len(all_docs)} documents.")
 

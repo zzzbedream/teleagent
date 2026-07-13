@@ -34,9 +34,15 @@ def main():
     logging.info("Fetching ACPs...")
     fetch_repo_sparse("https://github.com/avalanche-foundation/ACPs.git", os.path.join(base_dir, "acps"), ["ACPs/"])
     
-    # 2. Avalanche Docs (el repo avalanche-docs fue renombrado a builders-hub; el contenido vive en content/docs)
+    # 2. Avalanche Docs (repo renombrado a builders-hub). Además de content/docs, traemos
+    # blog/common/academy: ahí vive el contenido de la actualización Etna/Avalanche9000
+    # (etna-changes.mdx, etna-upgrade-motivation.mdx, 05-etna-upgrade.mdx, etc.).
     logging.info("Fetching Avalanche Docs...")
-    fetch_repo_sparse("https://github.com/ava-labs/builders-hub.git", os.path.join(base_dir, "docs"), ["content/docs"])
+    fetch_repo_sparse(
+        "https://github.com/ava-labs/builders-hub.git",
+        os.path.join(base_dir, "docs"),
+        ["content/docs", "content/blog", "content/common", "content/academy"],
+    )
     
     # 3. Teleporter
     logging.info("Fetching Teleporter contracts...")
