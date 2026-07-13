@@ -1,0 +1,29 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="TeleAgent">
+  <defs>
+    <linearGradient id="tg-bg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff5a5b"/>
+      <stop offset="0.55" stop-color="#e84142"/>
+      <stop offset="1" stop-color="#7c5cff"/>
+    </linearGradient>
+    <linearGradient id="tg-peak" x1="32" y1="14" x2="32" y2="48" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#ffe3e3"/>
+    </linearGradient>
+  </defs>
+  <!-- Badge -->
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#tg-bg)"/>
+  <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="15.25" stroke="#ffffff" stroke-opacity="0.18" stroke-width="1.5"/>
+  <!-- Montaña Avalanche (peak grande) -->
+  <path d="M32 17 L47 45 H17 Z" fill="url(#tg-peak)"/>
+  <!-- Peak secundario (superposición Avalanche) -->
+  <path d="M40 28 L52 46 H33 Z" fill="#ffffff" fill-opacity="0.55"/>
+  <!-- Corte de nieve/valle -->
+  <path d="M27 45 L32 36 L37 45 Z" fill="#e84142"/>
+  <!-- Nodo de IA / señal 'tele' en el pico -->
+  <circle cx="32" cy="17" r="4.4" fill="#06070b"/>
+  <circle cx="32" cy="17" r="4.4" stroke="#ffffff" stroke-width="1.6"/>
+  <circle cx="32" cy="17" r="1.7" fill="#ffffff"/>
+  <!-- Ondas de señal -->
+  <path d="M39 12 a9 9 0 0 1 0 10" stroke="#ffffff" stroke-opacity="0.85" stroke-width="1.6" stroke-linecap="round"/>
+  <path d="M25 12 a9 9 0 0 0 0 10" stroke="#ffffff" stroke-opacity="0.85" stroke-width="1.6" stroke-linecap="round"/>
+</svg>

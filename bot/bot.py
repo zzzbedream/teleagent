@@ -24,6 +24,10 @@ DATABASE_URL = normalize_async_db_url(os.getenv("DATABASE_URL", "postgresql+asyn
 FASTAPI_URL = os.getenv("FASTAPI_URL", "http://localhost:8001/query")
 
 COST_PER_QUERY_WEI = 100_000_000_000_000_000  # 0.1 AVAX
+# Cortesía: cada cuenta nueva recibe consultas gratis al vincular su wallet.
+# Elimina la fricción para jueces/nuevos usuarios sin romper el modelo de pago (free trial → pago).
+FREE_TRIAL_QUERIES = 5
+FREE_TRIAL_CREDITS = FREE_TRIAL_QUERIES * COST_PER_QUERY_WEI
 DISCORD_MESSAGE_LIMIT = 1950
 
 def is_valid_evm_address(address: str) -> bool:
@@ -86,10 +90,15 @@ async def link_wallet(interaction: discord.Interaction, address: str):
                 await session.commit()
                 await interaction.response.send_message(f"✅ Billetera actualizada a: `{address}`", ephemeral=True)
             else:
-                new_user = User(discord_id=discord_id, wallet_address=address, api_credits=0)
+                new_user = User(discord_id=discord_id, wallet_address=address, api_credits=FREE_TRIAL_CREDITS)
                 session.add(new_user)
                 await session.commit()
-                await interaction.response.send_message(f"✅ Cuenta vinculada exitosamente con la billetera: `{address}`", ephemeral=True)
+                await interaction.response.send_message(
+                    f"✅ Cuenta vinculada con la billetera: `{address}`\n"
+                    f"🎁 Te regalamos **{FREE_TRIAL_QUERIES} consultas gratis** para que pruebes ahora mismo con `/ask`.\n"
+                    f"Cuando se acaben, envía AVAX al contrato para recargar.",
+                    ephemeral=True,
+                )
     except IntegrityError:
         await interaction.response.send_message("❌ Esa billetera ya está vinculada a otra cuenta de Discord.", ephemeral=True)
 
@@ -101,7 +110,12 @@ async def ask(interaction: discord.Interaction, pregunta: str):
     discord_id = str(interaction.user.id)
 
     if not await charge_user(discord_id):
-        await interaction.followup.send("❌ Saldo insuficiente o cuenta no vinculada. Por favor, usa `/link_wallet` y envía al menos 0.1 AVAX al contrato inteligente para consultar.")
+        await interaction.followup.send(
+            "❌ Saldo insuficiente o cuenta no vinculada.\n"
+            "• ¿Primera vez? Usa `/link_wallet 0xTuDireccion` y recibes **5 consultas gratis**.\n"
+            "• ¿Ya las usaste? Recarga enviando 0.1 AVAX al contrato "
+            "(consíguelo gratis en el faucet de Fuji: https://core.app/tools/testnet-faucet/)."
+        )
         return
 
     error_message = None
