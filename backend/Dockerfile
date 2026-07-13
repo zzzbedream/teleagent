@@ -16,9 +16,13 @@ COPY scripts/ ./scripts/
 
 # app.*  se resuelve vía /app/backend ; database.* vía /app
 ENV PYTHONPATH=/app/backend:/app
-ENV PORT=8001
-# ChromaDB embebido persiste aquí; en Railway se monta un volumen en /data.
-ENV CHROMA_PATH=/data/chroma
+# El cerebro (ChromaDB) se HORNEA dentro de la imagen: no necesita volumen en Railway.
+ENV CHROMA_PATH=/app/chroma_data
 
+# Descarga la documentación oficial y genera los embeddings en tiempo de BUILD,
+# dejando el corpus incluido en la imagen. Así el backend arranca ya con conocimiento.
+RUN python scripts/fetch_repos.py && python -m app.ingest
+
+ENV PORT=8001
 # Railway inyecta $PORT en tiempo de ejecución.
 CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT}"]

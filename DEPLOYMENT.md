@@ -1,16 +1,10 @@
 # 🚂 Despliegue en Railway — TeleAgent
 
 Guía para dejar TeleAgent **funcionando 24/7 sin depender de tu PC**. Son **5 servicios**.
-El backend es liviano (embeddings ONNX, sin PyTorch) y trae **ChromaDB embebido** en un volumen,
-así que no hay un servicio de base vectorial aparte.
-
-Despliegue en **dos fases**: primero **el cerebro** (backend + Postgres, y se verifica que tiene
-conocimiento), y solo entonces **las caras** (landing, bot, indexer).
-
-> **Por qué el cerebro primero:** el conocimiento del bot NO viene pre-cargado. Es documentación
-> oficial (ACPs + Builders Hub + Teleporter, ~320+ docs) que se descarga y se convierte en
-> embeddings dentro de ChromaDB en un paso único (el "seed"). Antes de sembrar, el cerebro está
-> vacío y el bot responde "no tengo información" a todo.
+El backend es liviano (embeddings ONNX, sin PyTorch) y trae **el cerebro (ChromaDB) HORNEADO
+dentro de la imagen**: la documentación se descarga y se convierte en embeddings durante el
+build, así que **no necesitas volumen** (que en planes pequeños de Railway no está disponible)
+ni un paso manual de carga. El backend arranca ya con conocimiento.
 
 **Datos que reusarás:**
 - Repo: `zzzbedream/teleagent`
@@ -26,47 +20,37 @@ conocimiento), y solo entonces **las caras** (landing, bot, indexer).
 
 ## Reset (empezar limpio)
 Proyecto viejo → **Settings → Danger → Delete Project**. Luego **New Project → Empty Project**.
+**Si tenías un servicio `chromadb` aparte, ya no se usa: no lo crees.**
 
 ---
 
-# FASE A — El cerebro (desplegar y VERIFICAR)
+# FASE A — El cerebro (backend + Postgres)
 
 ## A1. PostgreSQL
 En el proyecto: **`Ctrl`+`K`** → `Postgres` → **Add PostgreSQL**. Sin más config.
 
-## A2. Backend (RAG + ChromaDB embebido)
+## A2. Backend (RAG con cerebro horneado)
 1. **`+ New` → GitHub Repo** → `teleagent`.
 2. **Settings → Config-as-code → Railway Config File** = `backend/railway.json`.
-3. **Settings → Volumes → Add Volume**, punto de montaje **`/data`** (aquí persiste el cerebro).
-4. **Networking → Generate Domain** → **copia la URL**.
-5. **Variables:**
+3. **Networking → Generate Domain** → **copia la URL**.
+4. **Variables** (NO pongas `CHROMA_PATH`, ni volumen — el cerebro va dentro de la imagen):
    ```
    DEEPSEEK_API_KEY = tu_api_key_de_deepseek
    DATABASE_URL     = ${{Postgres.DATABASE_URL}}
-   CHROMA_PATH      = /data/chroma
    ALLOWED_ORIGINS  = *
    ```
-6. Verifica que arranca: `https://TU-BACKEND.up.railway.app/health` → `{"status":"ok","documents":0}`
-   (0 es correcto por ahora: aún no sembramos.)
+5. Al desplegar, el **build descarga la documentación y hornea el cerebro (~3-6 min)**. Es normal
+   que el build tarde más que antes: está generando los ~2500 embeddings una sola vez.
 
-## A3. Sembrar el corpus (una sola vez)
-En el servicio **backend** → Terminal/Shell (o CLI de Railway con `railway run`):
-```
-python scripts/fetch_repos.py && python -m app.ingest
-```
-Descarga la documentación oficial y la indexa en el volumen. Tarda varios minutos.
-
-## A4. Reiniciar el backend
-Railway → servicio backend → **⋮ → Restart**. Así abre el cerebro recién sembrado con estado limpio.
-
-## A5. 🚦 Filtro de verificación (NO sigas si falla)
-- `https://TU-BACKEND.up.railway.app/health` → **`"documents": ~320`** (no `0`).
-  - `documents: 0` → el seed no cargó; repite A3 y revisa sus logs.
-- **Solo si `documents` > 0, pasa a la Fase B.**
+## A3. 🚦 Verificación
+`https://TU-BACKEND.up.railway.app/health` → **`{"status":"ok","documents": ~2500}`**.
+- Si `documents` > 0 → el cerebro está cargado. Pasa a la Fase B.
+- Si `documents` es `0` o el build falló → mira los **Deploy/Build Logs** del backend (el build
+  aborta a propósito si el corpus queda vacío).
 
 ---
 
-# FASE B — Las caras (solo tras pasar A5)
+# FASE B — Las caras (solo tras pasar A3)
 
 ## B0. Link de invitación del bot (Discord Developer Portal)
 App → **OAuth2 → URL Generator** → scopes **`bot`** + **`applications.commands`**; permisos
@@ -112,20 +96,22 @@ App → **OAuth2 → URL Generator** → scopes **`bot`** + **`applications.comm
 
 ## Tabla resumen
 
-| Fase | Servicio | Railway Config File | Dominio | Volumen | Variables clave |
-|---|---|---|---|---|---|
-| A1 | Postgres | — (plugin) | no | — | — |
-| A2 | backend | `backend/railway.json` | **sí** | **`/data`** | DEEPSEEK_API_KEY, DATABASE_URL, CHROMA_PATH, ALLOWED_ORIGINS |
-| A3-A5 | (seed + restart + verificar) | — | — | — | `/health` → documents > 0 |
-| B1 | landing | `frontend/railway.json` | **sí** | — | BACKEND_URL, DISCORD_INVITE_URL, GITHUB_URL, CONTRACT_ADDRESS |
-| B2 | bot | `bot/railway.json` | no | — | DISCORD_TOKEN, DATABASE_URL, FASTAPI_URL |
-| B3 | indexer | `indexer/railway.json` | no | — | WSS_URL, DATABASE_URL, CONTRACT_ADDRESS |
+| Fase | Servicio | Railway Config File | Dominio | Variables clave |
+|---|---|---|---|---|
+| A1 | Postgres | — (plugin) | no | — |
+| A2 | backend | `backend/railway.json` | **sí** | DEEPSEEK_API_KEY, DATABASE_URL, ALLOWED_ORIGINS |
+| A3 | (verificar) | — | — | `/health` → documents > 0 |
+| B1 | landing | `frontend/railway.json` | **sí** | BACKEND_URL, DISCORD_INVITE_URL, GITHUB_URL, CONTRACT_ADDRESS |
+| B2 | bot | `bot/railway.json` | no | DISCORD_TOKEN, DATABASE_URL, FASTAPI_URL |
+| B3 | indexer | `indexer/railway.json` | no | WSS_URL, DATABASE_URL, CONTRACT_ADDRESS |
 
 ## Solución de problemas
 - **`Railpack could not determine how to build`:** falta el Railway Config File del servicio.
-- **"Application failed to respond":** el backend se cayó al arrancar. Con la imagen liviana (sin
-  torch) ya no debería pasar por memoria; si ocurre, mira los Deploy Logs del backend.
+- **Build del backend falla en `app.ingest`:** revisa los Build Logs; puede ser red al clonar los
+  docs. Reintenta el deploy. El build aborta a propósito si el corpus queda vacío.
+- **"Application failed to respond":** el backend se cayó al arrancar (antes era memoria por torch;
+  ya no debería pasar). Mira los Deploy Logs.
 - **`{"detail":"Not Found"}` en `/`:** normal en el backend. Usa `/health`.
-- **`/health` da `documents: 0`:** el corpus no se sembró (repite A3 + A4).
+- **`/health` da `documents: 0`:** el horneado del build no cargó docs; revisa los Build Logs.
 - **La demo de la landing no responde:** falta `BACKEND_URL`, o CORS (pon la URL de la landing en `ALLOWED_ORIGINS`).
 - **El bot no muestra comandos:** revisa `DISCORD_TOKEN` y que se invitó con `applications.commands`.
