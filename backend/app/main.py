@@ -1,4 +1,5 @@
 import os
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
@@ -9,26 +10,33 @@ from pydantic import BaseModel
 
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '..', '.env'))
 
-from app.llm_chain import generate_answer, get_document_count
+# IMPORTANTE: NO importamos app.llm_chain aquí. Eso cargaría langchain + chromadb + onnxruntime
+# al arrancar (lento y pesado) y el healthcheck de Railway fallaría. Se importa de forma
+# perezosa dentro de cada endpoint, así el arranque es instantáneo y /health responde al toque.
 
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
 # Orígenes permitidos para la landing (demo en vivo). Coma-separados; "*" por defecto.
-# Sin credenciales, así que el wildcard es seguro para un endpoint de solo lectura.
 ALLOWED_ORIGINS = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "*").split(",") if o.strip()]
+
+
+async def _ensure_db_schema():
+    """Crea las tablas (idempotente). Corre en segundo plano para no bloquear el arranque."""
+    database_url = os.getenv("DATABASE_URL")
+    if not database_url:
+        return
+    try:
+        from database.models import init_db
+        await init_db(database_url)
+        logging.info("Database schema ensured.")
+    except Exception as e:
+        logging.warning(f"Could not initialize DB schema at startup: {e}")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Crea las tablas (idempotente) para que bot e indexer tengan el esquema listo.
-    database_url = os.getenv("DATABASE_URL")
-    if database_url:
-        try:
-            from database.models import init_db
-            await init_db(database_url)
-            logging.info("Database schema ensured.")
-        except Exception as e:
-            logging.warning(f"Could not initialize DB schema at startup: {e}")
+    # En segundo plano: el arranque termina de inmediato y el healthcheck pasa sin esperar a la DB.
+    asyncio.create_task(_ensure_db_schema())
     yield
 
 
@@ -49,12 +57,20 @@ class QueryRequest(BaseModel):
 
 @app.get("/health")
 async def health_check():
-    # documents: nº de docs en ChromaDB. >0 = el cerebro está cargado; 0 = falta sembrar el corpus.
+    # Trivial y siempre 200: es lo que revisa el healthcheck de Railway. No carga nada pesado.
+    return {"status": "ok"}
+
+
+@app.get("/status")
+async def status():
+    # Reporta cuántos documentos tiene el cerebro (carga chromadb perezosamente).
+    from app.llm_chain import get_document_count
     return {"status": "ok", "documents": get_document_count()}
 
 
 @app.post("/query")
 async def query_endpoint(request: QueryRequest):
+    from app.llm_chain import generate_answer  # carga perezosa de la maquinaria RAG
     try:
         result = await generate_answer(request.prompt)
         return result

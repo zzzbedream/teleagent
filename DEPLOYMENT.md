@@ -43,10 +43,14 @@ En el proyecto: **`Ctrl`+`K`** → `Postgres` → **Add PostgreSQL**. Sin más c
    que el build tarde más que antes: está generando los ~2500 embeddings una sola vez.
 
 ## A3. 🚦 Verificación
-`https://TU-BACKEND.up.railway.app/health` → **`{"status":"ok","documents": ~2500}`**.
-- Si `documents` > 0 → el cerebro está cargado. Pasa a la Fase B.
-- Si `documents` es `0` o el build falló → mira los **Deploy/Build Logs** del backend (el build
-  aborta a propósito si el corpus queda vacío).
+- `https://TU-BACKEND.up.railway.app/health` → `{"status":"ok"}` (confirma que el backend vive;
+  es lo que revisa el healthcheck de Railway, responde al instante).
+- `https://TU-BACKEND.up.railway.app/status` → **`{"status":"ok","documents": ~2500}`**.
+  - Si `documents` > 0 → el cerebro está cargado. Pasa a la Fase B.
+  - Si `documents` es `0` → mira los **Build Logs** del backend (el build aborta si el corpus queda vacío).
+
+> Nota: si pusiste un **Healthcheck Path**, que sea **`/health`** (no `/status`). `/health` es
+> liviano y responde de inmediato; el arranque no espera a cargar la IA.
 
 ---
 
