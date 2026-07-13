@@ -68,9 +68,14 @@ def main():
         raise SystemExit("No documents to ingest — corpus is empty. Aborting so we don't ship an empty brain.")
 
     logging.info("Initializing FastEmbed (ONNX) embeddings...")
+    # Modelo MULTILINGÜE (es/en): los docs están en inglés pero los usuarios preguntan en
+    # español; un modelo solo-inglés recupera mal. DEBE coincidir con el de llm_chain.py.
     # batch_size bajo: el default (256) hace que el tensor de atención de ONNX pida >2 GB y
     # falle por memoria. Con 16, el pico baja a ~200 MB (seguro en planes pequeños/builds).
-    embeddings = FastEmbedEmbeddings(batch_size=16)
+    embeddings = FastEmbedEmbeddings(
+        model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+        batch_size=16,
+    )
 
     chroma_path = os.getenv("CHROMA_PATH", "./chroma_data")
     logging.info(f"Opening embedded ChromaDB at {chroma_path}...")

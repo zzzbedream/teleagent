@@ -47,7 +47,10 @@ def get_document_count() -> int | None:
 
 def get_retriever():
     try:
-        embeddings = FastEmbedEmbeddings()
+        # MISMO modelo multilingüe que en ingest.py (si difieren, la búsqueda se rompe).
+        embeddings = FastEmbedEmbeddings(
+            model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+        )
         vectorstore = Chroma(
             client=_get_chroma_client(),
             collection_name=COLLECTION_NAME,
