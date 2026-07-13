@@ -27,7 +27,8 @@ async def _ensure_db_schema():
         return
     try:
         from database.models import init_db
-        await init_db(database_url)
+        # Timeout: si la DB no responde, no dejamos una tarea colgada para siempre.
+        await asyncio.wait_for(init_db(database_url), timeout=60)
         logging.info("Database schema ensured.")
     except Exception as e:
         logging.warning(f"Could not initialize DB schema at startup: {e}")
@@ -53,6 +54,19 @@ app.add_middleware(
 
 class QueryRequest(BaseModel):
     prompt: str
+
+
+@app.get("/")
+async def index():
+    # Índice amigable: evita el confuso {"detail":"Not Found"} al abrir la URL base.
+    return {
+        "service": "TeleAgent API",
+        "endpoints": {
+            "health": "GET /health (vivo?)",
+            "status": "GET /status (documentos del cerebro)",
+            "query": "POST /query {prompt}",
+        },
+    }
 
 
 @app.get("/health")

@@ -10,6 +10,9 @@ def run_cmd(cmd, cwd=None):
     result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
     if result.returncode != 0:
         logging.error(f"Command failed: {result.stderr}")
+        # Fallar ruidosamente: si un repo no se clona, el corpus queda cojo y es mejor
+        # abortar (p.ej. el build de Docker) que publicar un cerebro a medias.
+        raise SystemExit(f"fetch_repos abortado: fallo '{' '.join(cmd)}'")
 
 def fetch_repo_sparse(repo_url, target_dir, paths):
     if os.path.exists(target_dir):
